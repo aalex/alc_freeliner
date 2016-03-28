@@ -163,6 +163,7 @@ boolean maybe(int _p){
  */
 
 PShape cloneShape(PShape _source, float _scale, PVector _center){
+  // println("cloning : "+_source);
   if(_source == null) return null;
   PShape shp = createShape();
   shp.beginShape(_source.getKind());

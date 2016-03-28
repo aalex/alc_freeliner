@@ -206,7 +206,7 @@ class CircleBrush extends Brush {
 		// update if the size changed
 		if(abs(_rt.getScaledBrushSize() - scaledBrushSize) > 0.5){
 			scaledBrushSize = _rt.getScaledBrushSize();
-			scaledBrush =  createShape(ELLIPSE, 0, 0, scaledBrushSize, scaledBrushSize);
+			scaledBrush = createShape(ELLIPSE, 0, 0, scaledBrushSize, scaledBrushSize);
 		}
 		return scaledBrush;
 	}
