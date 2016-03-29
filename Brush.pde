@@ -14,20 +14,16 @@
 abstract class Brush implements FreelinerConfig{
 	String name =  "basic";//brush
   // Size to generate brushes
-	final int BASE_SIZE = 20;
-  final int HALF_SIZE = BASE_SIZE/2;
+	final float BASE_SIZE = BASE_BRUSH_SIZE;
+  final float HALF_SIZE = BASE_SIZE/2.0;
   // The brush
   PShape brushShape;
-  PShape scaledBrush;
-  float scaledBrushSize;
 
   /**
    * Constructor, generates the shape
    */
   Brush(){
     brushShape = generateBrush();
-    scaledBrush = brushShape;
-    scaledBrushSize = BASE_SIZE;
   }
 
   /**
@@ -46,12 +42,13 @@ abstract class Brush implements FreelinerConfig{
   public PShape getShape(RenderableTemplate _rt){
     // only clone if the size changed
 		// #p3 bug fix...
-  	if(abs(_rt.getScaledBrushSize() - scaledBrushSize) > 0.5){
-      scaledBrushSize = _rt.getScaledBrushSize();
-      scaledBrush = cloneShape(brushShape, scaledBrushSize/BASE_SIZE, new PVector(0,0));
-    }
-  	return scaledBrush;
+  	// if(abs(_rt.getScaledBrushSize() - scaledBrushSize) > 0.5){
+    //   scaledBrushSize = _rt.getScaledBrushSize();
+    //   scaledBrush = cloneShape(brushShape, scaledBrushSize/BASE_SIZE, new PVector(0,0));
+    // }
+  	return brushShape;
   }
+
 	public String getName(){
 		return name;
 	}
@@ -67,7 +64,6 @@ abstract class Brush implements FreelinerConfig{
  * A brush that is just a point.
  */
 class PointBrush extends Brush {
-
 	String name =  "point";//brush
 
   public PointBrush(){
@@ -165,24 +161,23 @@ class CustomBrush extends Brush {
    * Takes the sourceShape and makes the brush
    */
   public PShape generateBrush(){
-    scaledBrushSize = 1;
     return null;
   }
 
   public PShape getShape(RenderableTemplate _rt){
 
-    if(abs(_rt.getScaledBrushSize() - this.scaledBrushSize) > 0.5 || scaledBrush == null){
-      //println(_rt.getScaledBrushSize() - scaledBrushSize);
-      scaledBrushSize = _rt.getScaledBrushSize();
-      scaledBrush = cloneShape( _rt.getCustomShape(), scaledBrushSize/BASE_SIZE, new PVector(0,0));
-    }
-    if(scaledBrush == null){
-      PShape empty = createShape();
-      empty.beginShape();
-      empty.endShape(CLOSE);
-      return empty;
-    }
-    return scaledBrush;
+    // if(abs(_rt.getScaledBrushSize() - this.scaledBrushSize) > 0.5 || scaledBrush == null){
+    //   //println(_rt.getScaledBrushSize() - scaledBrushSize);
+    //   scaledBrushSize = _rt.getScaledBrushSize();
+    //   scaledBrush = cloneShape( , scaledBrushSize/BASE_SIZE, new PVector(0,0));
+    // }
+    // if(scaledBrush == null){
+    //   PShape empty = createShape();
+    //   empty.beginShape();
+    //   empty.endShape(CLOSE);
+    //   return empty;
+    // }
+    return _rt.getCustomShape();
   }
 }
 
@@ -198,18 +193,17 @@ class CircleBrush extends Brush {
 
   }
   public PShape generateBrush(){
-    PShape shp =  createShape(ELLIPSE, 0, 0, BASE_SIZE, BASE_SIZE);
+    PShape shp =  createShape(ELLIPSE, 0, 0, BASE_BRUSH_SIZE, BASE_BRUSH_SIZE);
     return shp;
   }
 	// overRide for scaling
-	public PShape getShape(RenderableTemplate _rt){
-		// update if the size changed
-		if(abs(_rt.getScaledBrushSize() - scaledBrushSize) > 0.5){
-			scaledBrushSize = _rt.getScaledBrushSize();
-			scaledBrush = createShape(ELLIPSE, 0, 0, scaledBrushSize, scaledBrushSize);
-		}
-		return scaledBrush;
-	}
+	// public PShape getShape(RenderableTemplate _rt){
+	// 	// update if the size changed
+	// 	if(abs(_rt.getScaledBrushSize() - scaledBrushSize) > 0.5){
+	// 		scaledBrush = createShape(ELLIPSE, 0, 0, BASE_BRUSH_SIZE, BASE_BRUSH_SIZE);
+	// 	}
+	// 	return brushShape;
+	// }
 }
 
 /**
@@ -337,6 +331,6 @@ class SprinkleBrush extends Brush {
   }
 
   public PShape getShape(RenderableTemplate _rt){
-    return generateSprinkles(_rt.getScaledBrushSize());
+    return generateSprinkles(BASE_BRUSH_SIZE);
   }
 }

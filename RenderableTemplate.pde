@@ -41,6 +41,7 @@ class RenderableTemplate extends TweakableTemplate{
 	int randomValue;
 	int largeRandom;
 	boolean direction;
+	float offsetSize;
 
 /*
  * Third tier, data that changes every render
@@ -56,9 +57,10 @@ class RenderableTemplate extends TweakableTemplate{
 	int repetition;
 	int segmentIndex;
 	float angleMod;
-	float scaledBrushSize;
+
 	int colorCount;
 	float hue;
+	// to be changed to custom shape
 	PShape brushShape;
 	boolean updateBrush;
 /*
@@ -125,7 +127,7 @@ class RenderableTemplate extends TweakableTemplate{
 		// this updates according to source template...
 		copy(sourceTemplate);
 		// find the scaled size, the brushSize of the source template may have changed
-		scaledBrushSize = brushSize * (BRUSH_SCALING ? segmentGroup.getBrushScaler() : 1.0);
+		//scaledBrushSize = brushSize * (BRUSH_SCALING ? segmentGroup.getBrushScaler() : 1.0);
 	}
 
 	public void setRawBeatCount(int _raw){
@@ -136,9 +138,10 @@ class RenderableTemplate extends TweakableTemplate{
 		unitInterval = _u;
 	}
 
-	public void forceScaledBrushSize(float _s){
-		scaledBrushSize = _s;
-	}
+
+	// public void forceScaledBrushSize(float _s){
+	// 	scaledBrushSize = _s;
+	// }
 
 	public float conditionLerp(float _lrp){
 		if(_lrp > timeStamp) return _lrp - timeStamp;
@@ -151,6 +154,10 @@ class RenderableTemplate extends TweakableTemplate{
 	///////    Mutators
 	///////
 	////////////////////////////////////////////////////////////////////////////////////
+
+	public void setOffsetSize(float _f){
+		offsetSize = _f;
+	}
 
 	public void setLerp(float _lrp){
 		lerp = _lrp;
@@ -278,9 +285,9 @@ class RenderableTemplate extends TweakableTemplate{
 		return segmentIndex;
 	}
 
-	public final float getScaledBrushSize(){
-		return scaledBrushSize;
-	}
+	// public final float getScaledBrushSize(){
+	// 	return scaledBrushSize;
+	// }
 
 	public final int getColorCount(){
 		return colorCount++;
@@ -292,6 +299,10 @@ class RenderableTemplate extends TweakableTemplate{
 
 	public final PShape getBrushShape(){
 		return brushShape;
+	}
+
+	public final float getOffsetSize(){
+		return offsetSize;
 	}
 	// // ask if the brush needs updating
 	// public final boolean updateBrush(){
@@ -355,12 +366,12 @@ class KillableTemplate extends RenderableTemplate{
 		// this updates according to source template...
 		//copy(sourceTemplate);
 		// find the scaled size, the brushSize of the source template may have changed
-		float sb = brushSize;// * segmentGroup.getBrushScaler();
+		//float sb = brushSize;// * segmentGroup.getBrushScaler();
 		//scaledBrushSize = brushSize;
-		if(sb != scaledBrushSize) {
-			updateBrush = true;
-			scaledBrushSize = sb;
-		}
+		// if(sb != scaledBrushSize) {
+		// 	updateBrush = true;
+		// 	scaledBrushSize = sb;
+		// }
 	}
 
 	public boolean isDone(){

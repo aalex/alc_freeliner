@@ -38,7 +38,8 @@ class LinePainter extends SegmentPainter{
 	// paint the segment in question
 	public void paintSegment(Segment _seg, RenderableTemplate _event){
 		super.paintSegment(_seg, _event);
-		_seg.setStrokeWidth(_event.getStrokeWeight());
+		_seg.setOffsetSize(_event.getStrokeWeight()/2.0);
+		_event.setOffsetSize(_event.getStrokeWeight()/2.0);
 		applyStyle(event.getCanvas());
 	}
 }
@@ -52,7 +53,7 @@ class FunLine extends LinePainter {
 	public void paintSegment(Segment _seg, RenderableTemplate _event){
 		super.paintSegment(_seg, _event);
 		//PVector pos = getInterpolator(_event.getInterpolateMode()).getPosition(_seg,_event,this);
-		vecLine(event.getCanvas(), _seg.getStrokeOffsetA(), getPosition(_seg));//_seg.getStrokePos(event.getLerp()));
+		vecLine(event.getCanvas(), _seg.getOffsetA(), getPosition(_seg));//_seg.getOffsetPos(event.getLerp()));
 	}
 }
 
@@ -64,7 +65,7 @@ class FullLine extends LinePainter {
 
 	public void paintSegment(Segment _seg, RenderableTemplate _event){
 		super.paintSegment(_seg, _event);
-		vecLine(event.getCanvas(), _seg.getStrokeOffsetA(), _seg.getStrokeOffsetB());
+		vecLine(event.getCanvas(), _seg.getOffsetA(), _seg.getOffsetB());
 	}
 }
 
@@ -77,13 +78,13 @@ class TrainLine extends LinePainter {
 	public void paintSegment(Segment _seg, RenderableTemplate _event){
 		super.paintSegment(_seg, _event);
 		float lrp = event.getLerp();
-		if(lrp < 0.5) vecLine(event.getCanvas(), _seg.getStrokeOffsetA(), _seg.getStrokePos(lrp*2));
-		else vecLine(event.getCanvas(), _seg.getStrokePos(2*(lrp-0.5)), _seg.getStrokeOffsetB());
+		if(lrp < 0.5) vecLine(event.getCanvas(), _seg.getOffsetA(), _seg.getOffsetPos(lrp*2));
+		else vecLine(event.getCanvas(), _seg.getOffsetPos(2*(lrp-0.5)), _seg.getOffsetB());
 
 		// test with enterpolator...
 		// if(lrp < 0.5){
 		// 	_event.setLerp(lrp*2.0);
-		// 	vecLine(event.getCanvas(), _seg.getStrokeOffsetA(), getPosition(_seg));
+		// 	vecLine(event.getCanvas(), _seg.getOffsetA(), getPosition(_seg));
 		// 	_event.setLerp(lrp);
 		// }
 		// else {
@@ -105,7 +106,7 @@ class MiddleLine extends LinePainter {
 		super.paintSegment(_seg, _event);
 		float aa = (event.getLerp()/2)+0.5;
 		float bb = -(event.getLerp()/2)+0.5;
-		vecLine(event.getCanvas(), _seg.getStrokePos(aa), _seg.getStrokePos(bb));
+		vecLine(event.getCanvas(), _seg.getOffsetPos(aa), _seg.getOffsetPos(bb));
 	}
 }
 
@@ -125,7 +126,7 @@ class Elliptic extends LinePainter {
 	public void paintSegment(Segment _seg, RenderableTemplate _event){
 		super.paintSegment(_seg, _event);
 		PVector pos = _seg.getPointA();
-		float sz = pos.dist(_seg.getStrokePos(event.getLerp()))*2;
+		float sz = pos.dist(_seg.getOffsetPos(event.getLerp()))*2;
 		event.getCanvas().ellipse(pos.x, pos.y, sz, sz);
 	}
 }
@@ -138,8 +139,8 @@ class RadarPainter extends LinePainter {
 		float dist = _seg.getLength();
 		float ang = (_event.getLerp()*TAU)+_seg.getAngle(true);
 		PVector pos = new PVector(dist*cos(ang),dist*sin(ang));
-		pos.add(_seg.getStrokeOffsetA());
-		vecLine(_event.getCanvas(), _seg.getStrokeOffsetA(), pos);
+		pos.add(_seg.getOffsetA());
+		vecLine(_event.getCanvas(), _seg.getOffsetA(), pos);
 	}
 }
 
@@ -151,7 +152,7 @@ class SegToSeg extends LinePainter{
 		super.paintSegment(_seg, _event);
 		Segment secondSeg = getNextSegment(_seg, _event.getBrushMode());
 		vecLine(event.getCanvas(), getPosition(_seg), getPosition(secondSeg));
-		//vecLine(event.getCanvas(), _seg.getStrokePos(_event.getLerp()), secondSeg.getStrokePos(_event.getLerp()));
+		//vecLine(event.getCanvas(), _seg.getOffsetPos(_event.getLerp()), secondSeg.getOffsetPos(_event.getLerp()));
 	}
 
 	public Segment getNextSegment(Segment _seg, int _iter){
@@ -197,10 +198,11 @@ class BrushPutter extends SegmentPainter{
 		return brushes[_index];
 	}
 
-
 	public void paintSegment(Segment _seg, RenderableTemplate _event){
 		super.paintSegment(_seg, _event);
-		_seg.setSize(_event.getScaledBrushSize()+_event.getStrokeWeight());
+		float _offset = (BASE_BRUSH_SIZE + _event.getStrokeWeight()) * _event.getBrushScaler() * _event.getSegmentGroup().getBrushScaler();
+		_seg.setOffsetSize(_offset);
+		_event.setOffsetSize(_offset);
 		//if(event.doUpdateBrush()) event.setBrushShape(getBrush(event.getBrushMode()).getShape(event));
 	}
 
@@ -219,9 +221,9 @@ class BrushPutter extends SegmentPainter{
     applyStyle(shape_);
     canvas.pushMatrix();
     canvas.translate(_p.x, _p.y);
+		canvas.scale( event.getBrushScaler() * event.getSegmentGroup().getBrushScaler());
     canvas.rotate(_a+ HALF_PI);// +event.getAngleMod());
 		canvas.shape(shape_);
-
 		canvas.popMatrix();
 	}
 }
@@ -232,7 +234,7 @@ class SimpleBrusher extends BrushPutter{
 
 	public void paintSegment(Segment _seg, RenderableTemplate _event){
 		super.paintSegment(_seg, _event);
-		//putShape(_seg.getBrushPos(_event.getLerp()), _seg.getAngle(_event.getDirection()) + _event.getAngleMod());
+		//putShape(_seg.getOffsetPos(_event.getLerp()), _seg.getAngle(_event.getDirection()) + _event.getAngleMod());
 		//PVector pos = getInterpolator(_event.getInterpolateMode()).getPosition(_seg,_event,this);
 		putShape(getPosition(_seg), getAngle(_seg, _event));
 	}
@@ -246,7 +248,7 @@ class SpiralBrusher extends BrushPutter{
 
 	public void paintSegment(Segment _seg, RenderableTemplate _event){
 		super.paintSegment(_seg, _event);
-		PVector pv = _seg.getBrushPos(event.getLerp()).get();
+		PVector pv = _seg.getOffsetPos(event.getLerp()).get();
     pv = vecLerp(pv, _seg.getCenter(), event.getLerp()).get();
 		putShape(pv, _seg.getAngle(event.getDirection()));
 	}
@@ -258,9 +260,9 @@ class TwoBrusher extends BrushPutter{
 	public void paintSegment(Segment _seg, RenderableTemplate _event){
 		super.paintSegment(_seg, _event);
 		float lrp = _event.getLerp();
-		PVector pv = _seg.getBrushPos(lrp).get();
+		PVector pv = _seg.getOffsetPos(lrp).get();
 		putShape(pv, _seg.getAngle(false));
-		pv = _seg.getBrushPos(-lrp+1).get();
+		pv = _seg.getOffsetPos(-lrp+1).get();
 		putShape(pv, _seg.getAngle(true));
 	}
 	// public float getAngle(Segment _seg, RenderableTemplate _event){
@@ -279,7 +281,7 @@ class InShapeBrusher extends BrushPutter{
 
 	public void paintSegment(Segment _seg, RenderableTemplate _event){
 		super.paintSegment(_seg, _event);
-		PVector pA = _seg.getStrokePos(_event.getLerp());
+		PVector pA = _seg.getOffsetPos(_event.getLerp());
 		PVector cent = _seg.getCenter();
 		putShape(vecLerp(pA, cent, 0.5),  _seg.getAngle(event.getDirection()));
 	}
@@ -293,7 +295,7 @@ class CenterBrusher extends BrushPutter{
 
 	public void paintSegment(Segment _seg, RenderableTemplate _event){
 		super.paintSegment(_seg, _event);
-		PVector pA = _seg.getBrushPos(0.0);
+		PVector pA = _seg.getOffsetPos(0.0);
 		PVector cent = _seg.getCenter();
 		float ang = atan2(pA.y - cent.y, pA.x - cent.x);
 		putShape(vecLerp(pA, cent, event.getLerp()),  ang+(event.getDirection() ? PI : 0) + event.getAngleMod());
@@ -312,7 +314,7 @@ class OppositeBrusher extends BrushPutter{
 			_dir = !_dir;
 			_lerp = -_lerp+1;
 		}
-		putShape(_seg.getBrushPos(_lerp), _seg.getAngle(_dir) + _event.getAngleMod());
+		putShape(_seg.getOffsetPos(_lerp), _seg.getAngle(_dir) + _event.getAngleMod());
 	}
 }
 
@@ -348,12 +350,12 @@ class TextWritter extends SegmentPainter{
 		String _txt = _seg.getText();
 		float _ang = _seg.getAngle(_event.getDirection());
 		canvas.textFont(font);
-		canvas.textSize(_event.getScaledBrushSize());
+		canvas.textSize(_event.getOffsetSize());
 		char[] carr = _txt.toCharArray();
 		int l = _txt.length();
 		PVector pos = new PVector(0,0);
 		for(int i = 0; i < l; i++){
-			pos = _seg.getStrokePos(-((float)i/(l+1) + 1.0/(l+1))+1);
+			pos = _seg.getOffsetPos(-((float)i/(l+1) + 1.0/(l+1))+1);
 			putChar(carr[i], pos, _ang);
 		}
 	}
@@ -362,7 +364,7 @@ class TextWritter extends SegmentPainter{
 		canvas.pushMatrix();
 		canvas.translate(_p.x, _p.y);
 		canvas.rotate(_a + event.getAngleMod());
-		canvas.text(_chr, 0, event.getScaledBrushSize()/3.0);
+		canvas.text(_chr, 0, event.getOffsetSize()/3.0);
 		canvas.popMatrix();
 	}
 }

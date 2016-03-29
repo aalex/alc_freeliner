@@ -359,7 +359,7 @@
     canvas.textSize(_size);
     char[] carr = txt.toCharArray();
     for(int i = 0; i < l; i++){
-      pos = _s.getStrokePos(-((float)i/(l+1) + 1.0/(l+1))+1);
+      pos = _s.getPos(-((float)i/(l+1) + 1.0/(l+1))+1);
       canvas.pushMatrix();
       canvas.translate(pos.x, pos.y);
       canvas.rotate(_s.getAngle(false));

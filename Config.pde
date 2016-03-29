@@ -164,4 +164,7 @@ interface FreelinerConfig{
   final int COLOR_MODE_COUNT = 31;
   final int INTERPOLATOR_MODE_COUNT = 9;
   final int SEGMENT_MODE_COUNT = 7;
+
+  // important numbers
+  final float BASE_BRUSH_SIZE = 20.0;
 }

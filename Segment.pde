@@ -15,50 +15,56 @@ class Segment {
   // these are the main coordinates of the start and end of a segment
   PVector pointA;
   PVector pointB;
-  // these are the coordinates of the offset of the brush size
-  PVector brushOffsetA;
-  PVector brushOffsetB;
-  PVector strokeOffsetA;
-  PVector strokeOffsetB;
+  // angles of offset
+  float offsetAngleA;
+  float offsetAngleB;
+  float offsetSize = 0;
+  PVector offsetA;
+  PVector offsetB;
 
-  // these are alternative positions for pointA and pointB
-  PVector ranA;
-  PVector ranB;
+  // center position of the segment
+  PVector center;
+
+  // angle of the segment.
+  float angle;
+  boolean centered;
+  boolean clockWise;
 
   // previous and or next segments, needed to create offset line
   Segment neighbA;
   Segment neighbB;
 
-  // center position of the segment
-  PVector center;
+  // these are alternative positions for pointA and pointB
+  PVector ranA;
+  PVector ranB;
 
-  float scaledSize;
-  float strokeWidth;
-
-  float angle;
-  //float anglePI;
-  boolean centered;
-  boolean clockWise;
+  // a segment specific random value...
   float ranFloat;
 
+  // text for the segment
   String segmentText;
 
   public Segment(PVector pA, PVector pB) {
-
     pointA = pA.get();
     pointB = pB.get();
+    offsetA = pA.get();
+    offsetB = pB.get();
+    offsetAngleA = 0;
+    offsetAngleB = 0;
+
     center = new PVector(0, 0, 0);
     newRan();
-    brushOffsetA = new PVector(0,0,0);
-    brushOffsetB = new PVector(0,0,0);
-    strokeOffsetA = new PVector(0,0,0);
-    strokeOffsetB = new PVector(0,0,0);
-    scaledSize = 10;
-    strokeWidth  = 3;
     centered = false;
     updateAngle();
     segmentText = "freeliner!";
   }
+
+
+  ////////////////////////////////////////////////////////////////////////////////////
+  ///////
+  ///////     Geometry stuff
+  ///////
+  ////////////////////////////////////////////////////////////////////////////////////
 
   public void updateAngle(){
     angle = atan2(pointA.y-pointB.y, pointA.x-pointB.x);
@@ -69,8 +75,73 @@ class Segment {
     }
     else if(pointA.y > pointB.y) clockWise = true;
     else clockWise = false;
+    updateOffsetAngles();
   }
 
+  // only gets called on angle update
+  private void updateOffsetAngles(){
+    if(neighbA == null || neighbB == null) return;
+    offsetAngleA = calcOffsetAngle(pointA, neighbA.getPointA(), pointB, center, neighbA.getPointB());
+    offsetAngleB = calcOffsetAngle(pointB, pointA, neighbB.getPointB(), center, neighbB.getPointA());
+  }
+
+  /**
+   * This is to generate new vertices in relation to brush size.
+   * @param PVector vertex to offset
+   * @param PVector previous neighboring vertex
+   * @param PVector following neighboring vertex
+   * @param PVector center of shape
+   * @param PVector an other to point to check if the offset should be perpendicular
+   * @return PVector offseted vertex
+   */
+  float calcOffsetAngle(PVector p, PVector pA, PVector pB, PVector c, PVector ot) {
+    float d = 20.0;
+    float angleA = (atan2(p.y-pA.y, p.x-pA.x));
+    float angleB = (atan2(p.y-pB.y, p.x-pB.x));
+    float A = radianAbs(angleA);
+    float B = radianAbs(angleB);
+    float ang = abs(A-B)/2; //the shortest angle
+    d = (d/2);
+    if(p.dist(ot) > 3.0) ang = HALF_PI + angle;
+    else {
+      d = d/sin(ang);
+      if (A<B) ang = (ang+angleA);
+      else ang = (ang+angleB);
+    }
+    PVector outA = new PVector(cos(ang)*d, sin(ang)*d, 0);
+    PVector outB = new PVector(cos(ang+PI)*d, sin(ang+PI)*d, 0);
+    outA.add(p);
+    outB.add(p);
+
+    if (c.dist(outA) < c.dist(outB)) return ang;
+    else  return ang+PI;
+  }
+
+  float radianAbs(float a) {
+    while (a<0) {
+      a+=TWO_PI;
+    }
+    while (a>TWO_PI) {
+      a-=TWO_PI;
+    }
+    return a;
+  }
+
+  // set the offsetsize
+  private void setOffsetSize(float _f){
+    if(offsetSize != _f){
+      offsetSize = _f;
+      if(centered) findOffset();
+    }
+  }
+
+  // set the offset coords
+  private void findOffset() {
+    offsetA.set( cos(offsetAngleA) * offsetSize, sin(offsetAngleA) * offsetSize, 0);
+    offsetA.add(pointA);
+    offsetB.set( cos(offsetAngleB) * offsetSize, sin(offsetAngleB) * offsetSize, 0);
+    offsetB.add(pointB);
+  }
 
   ////////////////////////////////////////////////////////////////////////////////////
   ///////
@@ -87,15 +158,7 @@ class Segment {
   public void setNeighbors(Segment a, Segment b){
     neighbA = a;
     neighbB = b;
-    findOffset();
-  }
-
-  private void findOffset() {
-    if(neighbA == null || neighbB == null) return;
-    brushOffsetA = inset(pointA, neighbA.getPointA(), pointB, center, scaledSize + strokeWidth, neighbA.getPointB());
-    brushOffsetB = inset(pointB, pointA, neighbB.getPointB(), center, scaledSize + strokeWidth, neighbB.getPointA());
-    strokeOffsetA = inset(pointA, neighbA.getPointA(), pointB, center, strokeWidth, neighbA.getPointB());
-    strokeOffsetB = inset(pointB, pointA, neighbB.getPointB(), center, strokeWidth, neighbB.getPointA());
+    updateOffsetAngles();
   }
 
   public void setPointA(PVector p){
@@ -110,83 +173,17 @@ class Segment {
 
   public void setCenter(PVector c) {
     centered = true;
-    //scaledSize = 0;
     center = c.get();
-    findOffset();
+    updateOffsetAngles();
   }
 
   public void unCenter(){
     centered = false;
   }
 
-  public void setSize(float _s){
-    if(_s != scaledSize && centered){
-      scaledSize = _s;
-      findOffset();
-    }
-  }
-
-  public void setStrokeWidth(float _w){
-    if(_w != scaledSize && centered){
-      strokeWidth = _w;
-      findOffset();
-    }
-  }
-
   public void setText(String w){
     segmentText = w;
   }
-
-  ////////////////////////////////////////////////////////////////////////////////////
-  ///////
-  ///////     Offset by brush size
-  ///////
-  ////////////////////////////////////////////////////////////////////////////////////
-
-  /**
-   * This is to generate new vertices in relation to brush size.
-   * @param PVector vertex to offset
-   * @param PVector previous neighboring vertex
-   * @param PVector following neighboring vertex
-   * @param PVector center of shape
-   * @param float distance to offset
-   * @param PVector an other to point to check if the offset should be perpendicular
-   * @return PVector offseted vertex
-   */
-  PVector inset(PVector p, PVector pA, PVector pB, PVector c, float d, PVector ot) {
-    float angleA = (atan2(p.y-pA.y, p.x-pA.x));
-    float angleB = (atan2(p.y-pB.y, p.x-pB.x));
-    float A = radianAbs(angleA);
-    float B = radianAbs(angleB);
-    float ang = abs(A-B)/2; //the shortest angle
-    d = (d/2);
-    if(p.dist(ot) > 3.0) ang = HALF_PI + angle;
-    else {
-      d = d/sin(ang);
-      if (A<B) ang = (ang+angleA);
-      else ang = (ang+angleB);
-    }
-
-    PVector outA = new PVector(cos(ang)*d, sin(ang)*d, 0);
-    PVector outB = new PVector(cos(ang+PI)*d, sin(ang+PI)*d, 0);
-    outA.add(p);
-    outB.add(p);
-
-    PVector offset;
-    if (c.dist(outA) < c.dist(outB)) return outA;
-    else  return outB;
-  }
-
-  float radianAbs(float a) {
-    while (a<0) {
-      a+=TWO_PI;
-    }
-    while (a>TWO_PI) {
-      a-=TWO_PI;
-    }
-    return a;
-  }
-
 
   ////////////////////////////////////////////////////////////////////////////////////
   ///////
@@ -218,37 +215,41 @@ class Segment {
    * Get pointA's strokeWidth offset
    * @return PVector offset of stroke width
    */
-  public final PVector getStrokeOffsetA(){
+  public final PVector getOffsetA(){
     if(!centered) return pointA;
-    return strokeOffsetA;
+    return offsetA;
   }
 
   /**
    * Get pointB's strokeWidth offset
    * @return PVector offset of stroke width
    */
-  public final PVector getStrokeOffsetB(){
+  public final PVector getOffsetB(){
     if(!centered) return pointB;
-    return strokeOffsetB;
+    return offsetB;
+  }
+
+  public final float getOffsetSize(){
+    return offsetSize;
   }
 
   /**
    * Get pointA's brushSize offset
    * @return PVector offset of brushSize
    */
-  public final PVector getBrushOffsetA(){
-    if(!centered) return pointA;
-    return brushOffsetA;
-  }
+  // public final PVector getBrushOffsetA(){
+  //   if(!centered) return pointA;
+  //   return brushOffsetA;
+  // }
 
   /**
    * Get pointB's brushSize offset
    * @return PVector offset of brushSize
    */
-  public final PVector getBrushOffsetB(){
-    if(!centered) return pointB;
-    return brushOffsetB;
-  }
+  // public final PVector getBrushOffsetB(){
+  //   if(!centered) return pointB;
+  //   return brushOffsetB;
+  // }
 
   /**
    * INTERPOLATED POSTIONS
@@ -259,9 +260,13 @@ class Segment {
    * @param float unit interval (lerp)
    * @return PVector interpolated position
    */
-  public final PVector getBrushPos(float _l) {
-    if (centered) return vecLerp(brushOffsetA, brushOffsetB, _l);
+  public final PVector getOffsetPos(float _l) {
+    if (centered) return vecLerp(offsetA, offsetB, _l);
     else return vecLerp(pointA, pointB, _l);
+  }
+
+  public final PVector getPos(float _l) {
+    return vecLerp(pointA, pointB, _l);
   }
 
   /**
@@ -269,10 +274,10 @@ class Segment {
    * @param float unit interval (lerp)
    * @return PVector interpolated position
    */
-  public final PVector getStrokePos(float _l) {
-    if (centered) return vecLerp(strokeOffsetA, strokeOffsetB, _l);
-    else return vecLerp(pointA, pointB, _l);
-  }
+  // public final PVector getStrokePos(float _l) {
+  //   if (centered) return vecLerp(strokeOffsetA, strokeOffsetB, _l);
+  //   else return vecLerp(pointA, pointB, _l);
+  // }
 
   //random pos
   public final PVector getRanA() {

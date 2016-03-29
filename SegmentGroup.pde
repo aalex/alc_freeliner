@@ -19,8 +19,12 @@
 
 class SegmentGroup {
   final int ID;
+
+  // modifiable int
+  int brushInt;
+  // scaling factor
   float brushScaler = 1.0;
-  int sizer = 10;
+
   PShape itemShape;
 
   ArrayList<Segment> segments;
@@ -61,6 +65,8 @@ class SegmentGroup {
     sortedSegments = new ArrayList();
     treeBranches = new ArrayList();
     templateList = new TemplateList();
+    brushInt = 100;
+    brushScaler = 1.0;
     segmentStart = new PVector(-10, -10, -10);
     center = new PVector(-10, -10, -10);
     firstPoint = true;
@@ -445,9 +451,9 @@ class SegmentGroup {
   }
 
   public int setBrushScaler(int s){
-    sizer = numTweaker(s, sizer);
-    brushScaler = sizer/10.0;
-    return sizer;
+    brushInt = numTweaker(s, brushInt);
+    brushScaler = brushInt/100.0;
+    return brushInt;
   }
 
   public void setTemplateList(TemplateList _tl){

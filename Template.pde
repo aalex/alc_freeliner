@@ -135,7 +135,7 @@ class Template implements FreelinerConfig{
 		easingMode = 0;
 		beatDivider = 1;
 		strokeWidth = 3;
-		brushSize = 20;
+		brushSize = (int)BASE_BRUSH_SIZE;
 		brushMode = 0;
 		enablerMode = 1;
 		renderLayer = 1;
@@ -235,6 +235,10 @@ class Template implements FreelinerConfig{
 
 	public final int getBrushSize(){
 		return brushSize;
+	}
+
+	public final float getBrushScaler(){
+		return brushSize/BASE_BRUSH_SIZE;
 	}
 
 	public final int getRotationMode(){
